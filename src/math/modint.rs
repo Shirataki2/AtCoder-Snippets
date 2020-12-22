@@ -5,8 +5,9 @@ use cargo_snippet::snippet;
 pub mod modint {
     use std::cell::RefCell;
     use std::ops::*;
+    use std::mem::swap;
 
-    type Num = u64;
+    type Num = i64;
     thread_local!(
         static MOD: RefCell<Num> = RefCell::new(0);
     );
@@ -18,7 +19,7 @@ pub mod modint {
         MOD.with(|x| x.replace(Num::from(v)));
     }
 
-    fn modulo() -> Num {
+    pub fn modulo() -> Num {
         MOD.with(|x| *x.borrow())
     }
 
@@ -41,6 +42,9 @@ pub mod modint {
             let m = modulo();
             if v >= m {
                 v %= m;
+            }
+            if v < 0 {
+                v = (v % m + m) % m;
             }
             ModInt(v)
         }
@@ -69,6 +73,21 @@ pub mod modint {
 
         pub fn value(&self) -> Num {
             self.0
+        }
+
+        pub fn inv<T>(&self) -> Num
+        where
+            Num: From<T>
+        {
+            let (mut a, mut b, mut u, mut v) = (self.0, modulo(), 1, 0);
+            while b > 0 {
+                let t = a / b;
+                a -= t * b;
+                swap(&mut a, &mut b);
+                u -= t * v;
+                swap(&mut u, &mut v);
+            }
+            ModInt::new::<i64>(u).value()
         }
     }
 
@@ -200,7 +219,7 @@ mod tests {
     use rand::distributions::Uniform;
     use rand::Rng;
 
-    const PRIMES: [u64; 3] = [1_000_000_007, 1_000_000_009, 988_244_353];
+    const PRIMES: [i64; 3] = [1_000_000_007, 1_000_000_009, 988_244_353];
 
     #[test]
     fn test_add_sub() {
@@ -208,8 +227,8 @@ mod tests {
         for m in &PRIMES {
             set_modint(*m);
             for _ in 0..10000 {
-                let x: u64 = rng.sample(Uniform::from(0..*m));
-                let y: u64 = rng.sample(Uniform::from(0..*m));
+                let x: i64 = rng.sample(Uniform::from(0..*m));
+                let y: i64 = rng.sample(Uniform::from(0..*m));
                 let mx = ModInt::new(x);
                 let my = ModInt::new(y);
                 assert_eq!((mx + my).value(), (x + y) % *m);
@@ -240,8 +259,8 @@ mod tests {
         for m in &PRIMES {
             set_modint(*m);
             for _ in 0..10000 {
-                let x: u64 = rng.sample(Uniform::from(0..*m));
-                let y: u64 = rng.sample(Uniform::from(0..*m));
+                let x: i64 = rng.sample(Uniform::from(0..*m));
+                let y: i64 = rng.sample(Uniform::from(0..*m));
                 let mx = ModInt::new(x);
                 let my = ModInt::new(y);
                 assert_eq!((mx * my).value(), (x * y) % *m);
@@ -252,29 +271,39 @@ mod tests {
 
     #[test]
     fn test_zero() {
-        set_modint(1_000_000_007u64);
-        let a = ModInt::new(1_000_000_000u64);
-        let b = ModInt::new(7u64);
+        set_modint(1_000_000_007i64);
+        let a = ModInt::new(1_000_000_000i64);
+        let b = ModInt::new(7i64);
         let c = a + b;
         assert_eq!(c.value(), 0);
     }
 
     #[test]
     fn test_pow() {
-        set_modint(1_000_000_007u64);
-        let a = ModInt::new(1_000_000u64);
-        let a = a.pow(2u64);
+        set_modint(1_000_000_007i64);
+        let a = ModInt::new(1_000_000i64);
+        let a = a.pow(2i64);
         assert_eq!(a.value(), 999993007);
     }
 
     #[test]
     fn test_div() {
-        set_modint(1_000_000_007u64);
-        for i in 1..=100_000u64 {
-            let mut a = ModInt::new(1u64);
+        set_modint(1_000_000_007i64);
+        for i in 1..=100_000i64 {
+            let mut a = ModInt::new(1i64);
             a /= i;
             a *= i;
             assert_eq!(a.value(), 1);
         }
+    }
+
+    #[test]
+    fn test_invmod() {
+        set_modint(7i64);
+        assert_eq!(ModInt::new(3i64).inv::<i64>(), 5);
+        set_modint(429i64);
+        assert_eq!(ModInt::new(2i64).inv::<i64>(), 215);
+        set_modint(1_000_000_007i64);
+        assert_eq!(ModInt::new(123_456_789i64).inv::<i64>(), 18_633_540);
     }
 }

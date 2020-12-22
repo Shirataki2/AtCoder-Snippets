@@ -2,7 +2,7 @@
 use cargo_snippet::snippet;
 
 #[snippet("pascal")]
-fn pascal_triangle(n: usize) -> Vec<Vec<u128>> {
+pub fn pascal_triangle(n: usize) -> Vec<Vec<u128>> {
     let mut c = vec![vec![0u128; n+1]; n+1];
     c[0][0] = 0;
     for n in 1..=n {

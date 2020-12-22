@@ -85,7 +85,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_factor_correct() {
+    fn test_factor_small() {
         let mut sf = SieveFactorizer::new(1, 1000);
         sf.build();
         let res = sf.factor(50);
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn should_factor_large_number() {
+    fn test_factor_large() {
         let mut sf = SieveFactorizer::new(123_456_000_000, 123_457_000_000);
         sf.build();
         let res = sf.factor(123_456_789_123);

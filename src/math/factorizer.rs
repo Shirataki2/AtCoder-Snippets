@@ -6,7 +6,7 @@ use std::collections::HashMap;
 /// Naive prime factorization (O(N^(1/2)))
 /// 
 /// Returns a map of { prime: exponent }.
-fn factorize(n: u64) -> HashMap<u64, u64> {
+pub fn factorize(n: u64) -> HashMap<u64, u64> {
     let mut ret = HashMap::new();
     let mut n = n;
     while n % 2 == 0 {
